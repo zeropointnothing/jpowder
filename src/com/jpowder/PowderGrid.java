@@ -18,6 +18,16 @@ public class PowderGrid {
 
     public BasePowder[] getPixels() { return pixels; }
     public BasePowder[] getUpdatablePixels() { return updatablePixels; }
+    public int getFilledPixels() {
+        int counter = 0;
+        for (BasePowder powder : pixels) {
+            if (powder != null) {
+                counter++;
+            }
+        }
+
+        return counter;
+    }
     public int getWidth() { return width; };
     public int getHeight() { return height; }
 
@@ -60,7 +70,11 @@ public class PowderGrid {
      * @return Whether there is a powder at x,y
      */
     public boolean isPowderAt(int x, int y) {
-        return (updatablePixels[findTrueLocation(x, y)] != null);
+        try {
+            return (updatablePixels[findTrueLocation(x, y)] != null);
+        } catch (ArrayIndexOutOfBoundsException e) {
+            return false;
+        }
     }
 
 
@@ -115,7 +129,11 @@ public class PowderGrid {
     public void setPixel(int x, int y, BasePowder powder) {
         int pos = findTrueLocation(x, y);
 
-        updatablePixels[pos] = powder;
+        try {
+            updatablePixels[pos] = powder;
+        } catch (ArrayIndexOutOfBoundsException e) {
+            throw new RuntimeException("Out of bounds! (" + x + "," + y + "}");
+        }
         powder.x = x;
         powder.y = y;
 
@@ -123,7 +141,7 @@ public class PowderGrid {
 
     public void erasePixel(int x, int y) {
         int pos  = findTrueLocation(x, y);
-        updatablePixels[pos]= null;
+        updatablePixels[pos] = null;
     }
 
     /**
@@ -136,7 +154,7 @@ public class PowderGrid {
     public void movePixel(int x, int y, BasePowder powder) {
         int oldPos = findTrueLocation(powder.x, powder.y);
 
-        if (x >= 0 && x < width && y >= 0 && y < height) {
+        if (x >= 0 && x < width-1 && y >= 0 && y < height) {
             int newPos = findTrueLocation(x, y);
 
             BasePowder displacedPowder = updatablePixels[newPos];

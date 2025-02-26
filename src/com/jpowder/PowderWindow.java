@@ -251,19 +251,18 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
                     new_y = gridPixel.y+1;
 
                     pg.movePixel(new_x, new_y, gridPixel);
-                    continue;
                 }
             }
             boolean shouldMoveLeft = rand.nextBoolean();
             if (pg.isPowderAt(gridPixel.x-1, gridPixel.y) && shouldMoveLeft) {
                 BasePowder sidePixel = pg.getUpdatablePixels()[pg.findTrueLocation(gridPixel.x-1, gridPixel.y)];
-                if (pg.canDisplace(sidePixel, gridPixel) && rand.nextBoolean()) {
+                if (pg.canDisplace(sidePixel, gridPixel) && sidePixel.canDisplaceHorizontal && rand.nextBoolean()) {
                     new_x = gridPixel.x-1;
                     pg.movePixel(new_x, gridPixel.y, gridPixel);
                 }
             } else if (pg.isPowderAt(gridPixel.x+1, gridPixel.y)) {
                 BasePowder sidePixel = pg.getUpdatablePixels()[pg.findTrueLocation(gridPixel.x+1, gridPixel.y)];
-                if (pg.canDisplace(sidePixel, gridPixel) && rand.nextBoolean()) {
+                if (pg.canDisplace(sidePixel, gridPixel) && sidePixel.canDisplaceHorizontal && rand.nextBoolean()) {
                     new_x = gridPixel.x+1;
                     pg.movePixel(new_x, gridPixel.y, gridPixel);
                 }
@@ -309,7 +308,7 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
 
         // Ensure grid coordinates are within bounds
         adjustedX = Math.max(0, Math.min(adjustedX, pg.getWidth() - 2));
-        adjustedY = Math.max(0, Math.min(adjustedY, pg.getHeight() - 1 - yPadding));
+        adjustedY = Math.max(0, Math.min(adjustedY, pg.getHeight() - yPadding));
 
         return new Point(adjustedX, adjustedY);
     }

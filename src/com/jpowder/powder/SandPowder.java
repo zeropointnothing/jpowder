@@ -7,5 +7,6 @@ public class SandPowder extends BasePowder {
         super(ShiftRule.SLIP, 1);
 
         color = PowderUtilities.rgbToColorInt(246, 225, 176);
+        canDisplaceHorizontal = true;
     }
 }

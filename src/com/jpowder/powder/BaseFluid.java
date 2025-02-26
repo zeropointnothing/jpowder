@@ -7,5 +7,6 @@ public class BaseFluid extends BasePowder {
         super(ShiftRule.FLUID, 0);
 
         color = PowderUtilities.rgbToColorInt(0, 0, 255);
+        canDisplaceHorizontal = true;
     }
 }

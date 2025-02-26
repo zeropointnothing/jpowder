@@ -6,6 +6,8 @@ public class BasePowder implements Cloneable {
 
     public final ShiftRule shift;
     public final int fIndex;
+    public boolean canDisplaceHorizontal;
+    public boolean canDisplaceVertical;
 
     public float velocity;
     public final float TERMINAL_VELOCITY = 25;
@@ -33,6 +35,9 @@ public class BasePowder implements Cloneable {
         color = (int) (Math.random() * 0xffffff);
         this.shift = shift;
         this.fIndex = fIndex;
+
+        canDisplaceHorizontal = true;
+        canDisplaceVertical = true;
     }
 
     @Override
