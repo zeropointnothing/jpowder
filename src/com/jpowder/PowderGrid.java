@@ -63,6 +63,29 @@ public class PowderGrid {
         return (updatablePixels[findTrueLocation(x, y)] != null);
     }
 
+
+    /**
+     * Check if {@code original} can be displaced by {@code with}.
+     * @param original The original powder, or the one to be displaced
+     * @param with The new powder, or the one to displace with
+     * @param reverse Whether to check if fIndex is greater than instead
+     * @return if displacement is allowed
+     */
+    public boolean canDisplace(BasePowder original, BasePowder with, boolean reverse) {
+        if (original.fIndex == -1 || with.fIndex == -1) {
+            return false;
+        }
+
+        if (reverse) {
+            return (original.fIndex > with.fIndex);
+        } else {
+            return (original.fIndex < with.fIndex);
+        }
+    }
+    public boolean canDisplace(BasePowder original, BasePowder with) {
+        return canDisplace(original, with, false);
+    }
+
     public boolean hasNeighborsBelow(BasePowder powder) {
         return isPowderAt(powder.x+1, powder.y+1) &&
                 isPowderAt(powder.x-1, powder.y+1);
@@ -76,6 +99,14 @@ public class PowderGrid {
     public boolean hasNeighborBelow(BasePowder powder) {
         try {
             return isPowderAt(powder.x, powder.y+1);
+        } catch (ArrayIndexOutOfBoundsException e) {
+            return false;
+        }
+    }
+
+    public boolean hasNeighborAbove(BasePowder powder) {
+        try {
+            return isPowderAt(powder.x, powder.y-1);
         } catch (ArrayIndexOutOfBoundsException e) {
             return false;
         }
@@ -105,16 +136,27 @@ public class PowderGrid {
     public void movePixel(int x, int y, BasePowder powder) {
         int oldPos = findTrueLocation(powder.x, powder.y);
 
-        if (x >= 0 && x < width && y >= 0 && y <= height-1) {
+        if (x >= 0 && x < width && y >= 0 && y < height) {
             int newPos = findTrueLocation(x, y);
 
-            updatablePixels[oldPos] = null;
-            updatablePixels[newPos] = powder;
+            BasePowder displacedPowder = updatablePixels[newPos];
 
+            // Swap positions if there's a powder in the new position
+            if (displacedPowder != null) {
+                updatablePixels[oldPos] = displacedPowder;
+                // ensure the displaced powder reflects the new position
+                displacedPowder.x = powder.x;
+                displacedPowder.y = powder.y;
+            } else {
+                updatablePixels[oldPos] = null;
+            }
+
+            updatablePixels[newPos] = powder;
             powder.x = x;
             powder.y = y;
-            }
+        }
     }
+
 
     public void refreshAllPixels() {
         for (int i = 0; i < updatablePixels.length; i++) {

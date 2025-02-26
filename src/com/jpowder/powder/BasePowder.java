@@ -5,6 +5,7 @@ public class BasePowder implements Cloneable {
     public int y;
 
     public final ShiftRule shift;
+    public final int fIndex;
 
     public float velocity;
     public final float TERMINAL_VELOCITY = 25;
@@ -24,13 +25,14 @@ public class BasePowder implements Cloneable {
         velocity = 1.0f;
     }
 
-    public BasePowder(ShiftRule shift) {
+    public BasePowder(ShiftRule shift, int fIndex) {
         x = 0;
         y = 0;
         velocity = 0.0f;
 
         color = (int) (Math.random() * 0xffffff);
         this.shift = shift;
+        this.fIndex = fIndex;
     }
 
     @Override

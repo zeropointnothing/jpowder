@@ -244,6 +244,31 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
                 }
             }
 
+            // float shift, powder can move pixels of a lower fIndex that itself
+            if (pg.hasNeighborBelow(gridPixel)) {
+                BasePowder belowPixel = pg.getUpdatablePixels()[pg.findTrueLocation(gridPixel.x, gridPixel.y+1)];
+                if (pg.canDisplace(belowPixel, gridPixel)) {
+                    new_y = gridPixel.y+1;
+
+                    pg.movePixel(new_x, new_y, gridPixel);
+                    continue;
+                }
+            }
+            boolean shouldMoveLeft = rand.nextBoolean();
+            if (pg.isPowderAt(gridPixel.x-1, gridPixel.y) && shouldMoveLeft) {
+                BasePowder sidePixel = pg.getUpdatablePixels()[pg.findTrueLocation(gridPixel.x-1, gridPixel.y)];
+                if (pg.canDisplace(sidePixel, gridPixel) && rand.nextBoolean()) {
+                    new_x = gridPixel.x-1;
+                    pg.movePixel(new_x, gridPixel.y, gridPixel);
+                }
+            } else if (pg.isPowderAt(gridPixel.x+1, gridPixel.y)) {
+                BasePowder sidePixel = pg.getUpdatablePixels()[pg.findTrueLocation(gridPixel.x+1, gridPixel.y)];
+                if (pg.canDisplace(sidePixel, gridPixel) && rand.nextBoolean()) {
+                    new_x = gridPixel.x+1;
+                    pg.movePixel(new_x, gridPixel.y, gridPixel);
+                }
+            }
+
             // Ensure new_x and new_y are within bounds
             if (new_x >= pg.getWidth()-1) {
                 new_x = pg.getWidth() - 2;
