@@ -28,13 +28,13 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
     private boolean rainbow = false;
     private final PowderGrid pg;
     private final Registry pr;
-    private String selectedPowder = "sand_powder";
+    private String selectedPowder = "water_fluid";
     private boolean erase = false;
 
     private boolean mouseDown = false;
     private Point mousePos;
 
-    private final int fps = 30;
+    private final int fps = 60;
 
     float pixelSizeByWidth;
     float pixelSizeByHeight;
@@ -48,7 +48,7 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
         this.height = height;
         frame = new JFrame("Powder Simulation");
         image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-        pg = new PowderGrid(250, 150);
+        pg = new PowderGrid(50, 50);
         pr = new Registry();
         pixels = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
         frame.add(this);
@@ -72,6 +72,8 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
             selectedPowder = "rock_powder";
         } else if (e.getKeyChar() == 's') {
             selectedPowder = "sand_powder";
+        } else if (e.getKeyChar() == 'w') {
+            selectedPowder = "water_fluid";
         } else if (e.getKeyChar() == 'e') {
             erase = !erase;
         }
@@ -141,15 +143,19 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
 
                 Point transPos = frameToPowderGrid(mousePos.x, mousePos.y);
 
-                if (!pg.hasPowder(transPos.x, transPos.y) && !erase) {
-                        pg.setPixel(transPos.x, transPos.y, pr.createInstance(selectedPowder));
-                } else if (pg.hasPowder(transPos.x, transPos.y) && erase) {
+                if (!pg.isPowderAt(transPos.x, transPos.y) && !erase) {
+                    BasePowder newPowder = pr.createInstance(selectedPowder);
+                    pg.setPixel(transPos.x, transPos.y, newPowder);
+                    pg.mergeGrid(); // make sure the grid reflects our changes
+                } else if (pg.isPowderAt(transPos.x, transPos.y) && erase) {
                     pg.erasePixel(transPos.x, transPos.y);
+                    pg.mergeGrid(); // make sure the grid reflects our changes
                 }
             }
 
             updatePixels();
-            pg.refreshPixels();
+            pg.refreshAllPixels();
+            pg.mergeGrid();
             render();
 
             long renderEnd = System.currentTimeMillis();
@@ -175,6 +181,12 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
         pixels = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
     }
 
+    /**
+     * Update all pixels on the grid.
+     * <p>
+     * Iterates over the main pixel grid, but applies updates to the updatable grid
+     * while using its values to calculate positions.
+     */
     private void updatePixels() {
         for (BasePowder gridPixel : pg.getPixels()) {
             if (gridPixel == null) { // no pixel here
@@ -195,10 +207,10 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
                     new_y = gridPixel.y;
 //                    gridPixel.color = (int) (Math.random() * 0xffffff);
 
-                    boolean canMoveLeft = (!pg.hasPowder(gridPixel.x-1, gridPixel.y+1) &&
-                            !pg.hasPowder(gridPixel.x-1, gridPixel.y));
-                    boolean canMoveRight = (!pg.hasPowder(gridPixel.x+1, gridPixel.y+1) &&
-                            !pg.hasPowder(gridPixel.x+1, gridPixel.y));
+                    boolean canMoveLeft = (!pg.isPowderAt(gridPixel.x-1, gridPixel.y+1) &&
+                            !pg.isPowderAt(gridPixel.x-1, gridPixel.y));
+                    boolean canMoveRight = (!pg.isPowderAt(gridPixel.x+1, gridPixel.y+1) &&
+                            !pg.isPowderAt(gridPixel.x+1, gridPixel.y));
 
                     if (canMoveLeft && canMoveRight) {
                         new_x += rand.nextBoolean() ? -1 : 1;
@@ -211,6 +223,25 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
             } else if (gridPixel.shift == ShiftRule.SOLID) {
                 gridPixel.velocity = 0;
                 new_y = gridPixel.y;
+            } else if (gridPixel.shift == ShiftRule.FLUID) {
+                if (pg.hasNeighborBelow(gridPixel) || gridPixel.y >= pg.getHeight()-yPadding) {
+                    gridPixel.velocity = 0;
+                    new_y = gridPixel.y;
+
+                    boolean canMoveLeft = (!pg.isPowderAt(gridPixel.x-1, gridPixel.y));
+                    boolean canMoveRight = (!pg.isPowderAt(gridPixel.x+1, gridPixel.y));
+                    boolean shouldMove = rand.nextBoolean();
+
+                    if (!shouldMove) {
+                        assert true; // do nothing
+                    } else if (canMoveLeft && canMoveRight) {
+                        new_x += rand.nextBoolean() ? -1 : 1;
+                    } else if (canMoveLeft) {
+                        new_x -= 1;
+                    } else if (canMoveRight) {
+                        new_x += 1;
+                    }
+                }
             }
 
             // Ensure new_x and new_y are within bounds
@@ -226,8 +257,7 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
                 new_y = 0;
             }
 
-            gridPixel.y = new_y;
-            gridPixel.x = new_x;
+            pg.movePixel(new_x, new_y, gridPixel); // we should update the grid, too
         }
     }
 
@@ -236,7 +266,7 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
         int randX = rand.nextInt(1, pg.getWidth());
         int randY = rand.nextInt(1, pg.getHeight()-yPadding); // trim 25 for now so we dont go out of bounds
 
-        if (!pg.hasPowder(randX, randY)) {
+        if (!pg.isPowderAt(randX, randY)) {
             pg.setPixel(randX, randY, new SandPowder());
         }
 
@@ -319,7 +349,7 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
 
                 Point transPos = frameToPowderGrid(mousePos.x, mousePos.y);
 
-                if (!pg.hasPowder(transPos.x, transPos.y)) {
+                if (!pg.isPowderAt(transPos.x, transPos.y)) {
                     pg.setPixel(transPos.x, transPos.y, pr.createInstance(selectedPowder));
                 }
             }
@@ -339,6 +369,7 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
         // register powders
         simulation.pr.register(new SandPowder(), "sand_powder");
         simulation.pr.register(new RockPowder(), "rock_powder");
+        simulation.pr.register(new WaterFluid(), "water_fluid");
 
         new Thread(simulation).start();
 //        new Thread(simulation::mouseLoop).start();

@@ -12,5 +12,9 @@ public enum ShiftRule {
     /**
      * This powder should 'slip' off of other powders if there's free space.
      */
-    SLIP
+    SLIP,
+    /**
+     * This powder should act as a fluid.
+     */
+    FLUID
 }
