@@ -1,7 +1,5 @@
 package com.jpowder;
 
-import org.w3c.dom.ranges.RangeException;
-
 /**
  * Several powder related utilities.
  */
