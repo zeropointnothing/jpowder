@@ -18,7 +18,7 @@ public class Registry {
     }
 
     public Registry() {
-        registeredPowder = new ArrayList<RegistryEntry>();
+        registeredPowder = new ArrayList<>();
     }
 
 
