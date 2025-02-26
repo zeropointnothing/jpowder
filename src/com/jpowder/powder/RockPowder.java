@@ -7,5 +7,7 @@ public class RockPowder extends BasePowder {
         super(ShiftRule.SOLID, -1);
 
         color = PowderUtilities.rgbToColorInt(61, 59, 60);
+        canDisplaceHorizontal = false;
+        canDisplaceVertical = false;
     }
 }

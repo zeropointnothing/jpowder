@@ -251,6 +251,7 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
                     new_y = gridPixel.y+1;
 
                     pg.movePixel(new_x, new_y, gridPixel);
+                    continue;
                 }
             }
             boolean shouldMoveLeft = rand.nextBoolean();
@@ -259,12 +260,14 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
                 if (pg.canDisplace(sidePixel, gridPixel) && sidePixel.canDisplaceHorizontal && rand.nextBoolean()) {
                     new_x = gridPixel.x-1;
                     pg.movePixel(new_x, gridPixel.y, gridPixel);
+                    continue;
                 }
             } else if (pg.isPowderAt(gridPixel.x+1, gridPixel.y)) {
                 BasePowder sidePixel = pg.getUpdatablePixels()[pg.findTrueLocation(gridPixel.x+1, gridPixel.y)];
                 if (pg.canDisplace(sidePixel, gridPixel) && sidePixel.canDisplaceHorizontal && rand.nextBoolean()) {
                     new_x = gridPixel.x+1;
                     pg.movePixel(new_x, gridPixel.y, gridPixel);
+                    continue;
                 }
             }
 
