@@ -24,10 +24,6 @@ public class BasePowder implements Cloneable {
         velocity = 1.0f;
     }
 
-    public int rgbToColorInt(int r, int g, int b) {
-        return (r << 16) | (g << 8) | b;
-    }
-
     public BasePowder(ShiftRule shift) {
         x = 0;
         y = 0;

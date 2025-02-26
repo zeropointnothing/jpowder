@@ -154,7 +154,7 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
             }
 
             updatePixels();
-            pg.refreshAllPixels();
+//            pg.refreshAllPixels();
             pg.mergeGrid();
             render();
 
@@ -325,7 +325,14 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
                     int py = (int) (gridPos.y * pixelSize + y + renderYOffset);
 
                     if (px < width && py < height && py >=0) {
-                        pixels[py * width + px] = 10855588;
+                        int color;
+                        if (erase) {
+                            color = PowderUtilities.rgbToColorInt(255, 0, 0);
+                        } else {
+                            color = PowderUtilities.rgbToColorInt(183, 183, 183);
+                        }
+
+                        pixels[py * width + px] = color;
                     }
                 }
             }
