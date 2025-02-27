@@ -13,6 +13,7 @@ import java.awt.event.MouseListener;
 import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
+import java.util.Objects;
 import java.util.Random;
 
 public class PowderWindow extends Canvas implements Runnable, MouseListener, KeyListener {
@@ -218,29 +219,38 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
             int new_y = (int) (gridPixel.y + gridPixel.velocity);
             int new_x = gridPixel.x;
 
-            if (gridPixel.shift == ShiftRule.SLIP) {
-                if (pg.hasNeighborBelow(gridPixel)) {
-                    gridPixel.velocity = 0; // Stay in place if there's a neighbor below
-                    new_y = gridPixel.y;
-//                    gridPixel.color = (int) (Math.random() * 0xffffff);
+            if (gridPixel.shift == ShiftRule.SLIP || gridPixel.shift == ShiftRule.STICK) {
+                shiftNaturally: {
+                    if (pg.hasNeighborBelow(gridPixel)) {
+                        BasePowder belowPixel = pg.getUpdatablePixels()[pg.findTrueLocation(gridPixel.x, gridPixel.y+1)];
+                        String gridID = pr.getID(gridPixel);
+                        String belowID = pr.getID(belowPixel);
 
-                    boolean canMoveLeft = (!pg.isPowderAt(gridPixel.x-1, gridPixel.y+1) &&
-                            !pg.isPowderAt(gridPixel.x-1, gridPixel.y));
-                    boolean canMoveRight = (!pg.isPowderAt(gridPixel.x+1, gridPixel.y+1) &&
-                            !pg.isPowderAt(gridPixel.x+1, gridPixel.y));
+                        gridPixel.velocity = 0; // Stay in place if there's a neighbor below
+                        new_y = gridPixel.y;
 
-                    if (canMoveLeft && canMoveRight) {
-                        new_x += rand.nextBoolean() ? -1 : 1;
-                    } else if (canMoveLeft) {
-                        new_x -= 1;
-                    } else if (canMoveRight) {
-                        new_x += 1;
+                        if (gridPixel.shift == ShiftRule.STICK && !Objects.equals(gridID, belowID)) {
+                            break shiftNaturally; // dont shift, but dont block float shifting
+                        }
+
+                        boolean canMoveLeft = (!pg.isPowderAt(gridPixel.x-1, gridPixel.y+1) &&
+                                !pg.isPowderAt(gridPixel.x-1, gridPixel.y));
+                        boolean canMoveRight = (!pg.isPowderAt(gridPixel.x+1, gridPixel.y+1) &&
+                                !pg.isPowderAt(gridPixel.x+1, gridPixel.y));
+
+                        if (canMoveLeft && canMoveRight) {
+                            new_x += rand.nextBoolean() ? -1 : 1;
+                        } else if (canMoveLeft) {
+                            new_x -= 1;
+                        } else if (canMoveRight) {
+                            new_x += 1;
+                        }
                     }
                 }
             } else if (gridPixel.shift == ShiftRule.SOLID) {
                 gridPixel.velocity = 0;
                 new_y = gridPixel.y;
-            } else if (gridPixel.shift == ShiftRule.FLUID) {
+            } else if (gridPixel.shift == ShiftRule.FLUID)  {
                 if (pg.hasNeighborBelow(gridPixel) || gridPixel.y >= pg.getHeight()-yPadding) {
                     gridPixel.velocity = 0;
                     new_y = gridPixel.y;
