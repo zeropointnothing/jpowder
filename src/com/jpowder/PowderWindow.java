@@ -11,6 +11,8 @@ import java.awt.event.MouseListener;
 import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Random;
 
@@ -19,6 +21,7 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
     private JFrame frame;
     private BufferedImage image;
     private int[] pixels;
+    public boolean webMode = false;
 
     private int width;
     private int height;
@@ -364,7 +367,7 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
     private void render() {
         BufferStrategy bs = getBufferStrategy();
         if (bs == null) {
-            createBufferStrategy(3);
+            createBufferStrategy(webMode ? 1 : 3);
             return;
         }
         Graphics g = bs.getDrawGraphics();
@@ -440,6 +443,16 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
 
     public static void main(String[] args) {
         PowderWindow simulation = new PowderWindow(800, 800);
+
+        System.out.println(Arrays.toString(args));
+
+        for (String arg : args) {
+            if (Objects.equals(arg, "-web") || Objects.equals(arg, "--web")) {
+                System.out.println("Running in Web mode. Buffering will be set to single.");
+                simulation.webMode = true;
+                break;
+            }
+        }
 
         // register powders
         simulation.pr.register(new SandPowder(), "sand_powder");
