@@ -15,8 +15,28 @@ public class Registry {
     /**
      * Registry entry, used for storing BasePowder objects and an ID.
      */
-    private record RegistryEntry(BasePowder powder, String id) { }
-    public record RelationshipEntry(String first, String second, String out, RelationshipType relationshipType) { };
+    private static class RegistryEntry {
+        public final BasePowder powder;
+        public final String id;
+
+        public RegistryEntry(BasePowder powder, String id) {
+            this.powder = powder;
+            this.id = id;
+        }
+    }
+    public static class RelationshipEntry {
+        public final String first;
+        public final String second;
+        public final String out;
+        public final RelationshipType relationshipType;
+
+        public RelationshipEntry(String first, String second, String out, RelationshipType relationshipType) {
+            this.first = first;
+            this.second = second;
+            this.out = out;
+            this.relationshipType = relationshipType;
+        }
+    }
 
     public Registry() {
         registeredPowder = new ArrayList<>();

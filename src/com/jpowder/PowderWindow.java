@@ -278,14 +278,14 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
                 // relationship check
                 if (pr.hasRelationship(gridID, belowID)) {
                     Registry.RelationshipEntry relationship = pr.getRelationship(gridID, belowID);
-                    if (relationship.relationshipType() == RelationshipType.MERGE) {
+                    if (relationship.relationshipType == RelationshipType.MERGE) {
                         new_y = belowPixel.y;
                         new_x = belowPixel.x;
 
                         pg.erasePixel(gridPixel.x, gridPixel.y);
                         pg.erasePixel(new_x, new_y);
 
-                        pg.setPixel(new_x, new_y, pr.createInstance(relationship.out()));;
+                        pg.setPixel(new_x, new_y, pr.createInstance(relationship.out));;
                         continue;
                     }
                 } else if (pg.canDisplace(belowPixel, gridPixel)) {
@@ -331,8 +331,8 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
 
 
     private void addRandPixel() {
-        int randX = rand.nextInt(1, pg.getWidth());
-        int randY = rand.nextInt(1, pg.getHeight()); // trim 25 for now so we dont go out of bounds
+        int randX = Math.max(0, rand.nextInt(pg.getWidth()));
+        int randY = Math.max(0, rand.nextInt(pg.getHeight())); // trim 25 for now so we dont go out of bounds
 
         if (!pg.isPowderAt(randX, randY)) {
             pg.setPixel(randX, randY, new SandPowder());
@@ -362,6 +362,13 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
     }
 
     private void render() {
+        BufferStrategy bs = getBufferStrategy();
+        if (bs == null) {
+            createBufferStrategy(3);
+            return;
+        }
+        Graphics g = bs.getDrawGraphics();
+
         for (int gridY = 0; gridY < pg.getHeight(); gridY++) {
             for (int gridX = 0; gridX < pg.getWidth(); gridX++) {
                 int color;
@@ -404,15 +411,8 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
                     }
                 }
             }
-
         }
 
-        BufferStrategy bs = getBufferStrategy();
-        if (bs == null) {
-            createBufferStrategy(3);
-            return;
-        }
-        Graphics g = bs.getDrawGraphics();
         g.drawImage(image, 0, 0, width, height, null);
         g.dispose();
         bs.show();
