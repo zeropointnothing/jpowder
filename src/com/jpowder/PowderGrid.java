@@ -142,8 +142,11 @@ public class PowderGrid {
     }
 
     public void erasePixel(int x, int y) {
-        int pos  = findTrueLocation(x, y);
-        updatablePixels[pos] = null;
+        try {
+            int pos = findTrueLocation(x, y);
+            updatablePixels[pos].erased = true; // mark it as erased
+            updatablePixels[pos] = null;
+        } catch (ArrayIndexOutOfBoundsException ignored) { }
     }
 
     /**

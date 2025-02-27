@@ -10,15 +10,17 @@ import java.util.Objects;
  */
 public class Registry {
     private final ArrayList<RegistryEntry> registeredPowder;
+    private final ArrayList<RelationshipEntry> registeredRelationships;
 
-        /**
-         * Registry entry, used for storing BasePowder objects and an ID.
-         */
-        private record RegistryEntry(BasePowder powder, String id) {
-    }
+    /**
+     * Registry entry, used for storing BasePowder objects and an ID.
+     */
+    private record RegistryEntry(BasePowder powder, String id) { }
+    public record RelationshipEntry(String first, String second, String out, RelationshipType relationshipType) { };
 
     public Registry() {
         registeredPowder = new ArrayList<>();
+        registeredRelationships = new ArrayList<>();
     }
 
 
@@ -30,6 +32,13 @@ public class Registry {
     public void register(BasePowder powder, String id) {
         registeredPowder.add(new RegistryEntry(powder, id));
     }
+    public void registerRelationship(String first, String second, String out, RelationshipType relationshipType) throws IllegalArgumentException {
+        if (isRegistered(first) && isRegistered(out) && isRegistered(out)) {
+            registeredRelationships.add(new RelationshipEntry(first, second, out, relationshipType));
+        } else {
+            throw new IllegalArgumentException("Invalid ID for powder!");
+        }
+    }
 
     /**
      * Create a new instance of a powder.
@@ -40,10 +49,46 @@ public class Registry {
     public BasePowder createInstance(String id) throws RuntimeException {
         for (RegistryEntry entry : registeredPowder) {
             if (Objects.equals(entry.id, id)) {
+                BasePowder powderClone = entry.powder.clone();
                 return entry.powder.clone();
             }
         }
 
         throw new RuntimeException("No such Powder: " + id);
+    }
+    public RelationshipEntry getRelationship(String first, String second) {
+        for (RelationshipEntry entry : registeredRelationships) {
+            if (Objects.equals(entry.first, first) && Objects.equals(entry.second, second) ||
+                    Objects.equals(entry.first, second) && Objects.equals(entry.second, first)) {
+                return entry;
+            }
+        }
+        throw new IllegalArgumentException("No such relationship (" + first + "," + second + ") is registered.");
+    }
+    public String getID(BasePowder powder) throws IllegalArgumentException {
+        for (RegistryEntry entry : registeredPowder) {
+            if (entry.powder.getClass() == powder.getClass()) {
+                return entry.id;
+            }
+        }
+        throw new IllegalArgumentException("No such class '" + powder.getClass() + "' is registered.");
+    }
+    public boolean hasRelationship(String first, String second) {
+        for (RelationshipEntry entry : registeredRelationships) {
+            if (Objects.equals(entry.first, first) && Objects.equals(entry.second, second) ||
+                    Objects.equals(entry.first, second) && Objects.equals(entry.second, first)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    public boolean isRegistered(String id) {
+        for (RegistryEntry entry : registeredPowder) {
+            if (Objects.equals(entry.id, id)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

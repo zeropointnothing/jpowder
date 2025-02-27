@@ -4,6 +4,8 @@ public class BasePowder implements Cloneable {
     public int x;
     public int y;
 
+    public boolean erased; // whether the powder is marked as 'erased' and should be ignored
+
     public final ShiftRule shift;
     public final int fIndex;
     public boolean canDisplaceHorizontal;
@@ -38,6 +40,7 @@ public class BasePowder implements Cloneable {
 
         canDisplaceHorizontal = true;
         canDisplaceVertical = true;
+        erased = false;
     }
 
     @Override

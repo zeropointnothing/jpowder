@@ -49,7 +49,7 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
         this.height = height;
         frame = new JFrame("Powder Simulation");
         image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-        pg = new PowderGrid(50, 50);
+        pg = new PowderGrid(250, 150);
         pr = new Registry();
         pixels = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
         frame.add(this);
@@ -73,6 +73,8 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
             selectedPowder = "rock_powder";
         } else if (e.getKeyChar() == 's') {
             selectedPowder = "sand_powder";
+        } else if (e.getKeyChar() == 'm') {
+            selectedPowder = "wet_sand_powder";
         } else if (e.getKeyChar() == 'w') {
             selectedPowder = "water_fluid";
         } else if (e.getKeyChar() == 'e') {
@@ -204,7 +206,7 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
      */
     private void updatePixels() {
         for (BasePowder gridPixel : pg.getPixels()) {
-            if (gridPixel == null) { // no pixel here
+            if (gridPixel == null || gridPixel.erased) { // no pixel here
                 continue;
             }
 
@@ -262,7 +264,23 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
             // float shift, powder can move pixels of a lower fIndex that itself
             if (pg.hasNeighborBelow(gridPixel)) {
                 BasePowder belowPixel = pg.getUpdatablePixels()[pg.findTrueLocation(gridPixel.x, gridPixel.y+1)];
-                if (pg.canDisplace(belowPixel, gridPixel)) {
+                String gridID = pr.getID(gridPixel);
+                String belowID = pr.getID(belowPixel);
+
+                // relationship check
+                if (pr.hasRelationship(gridID, belowID)) {
+                    Registry.RelationshipEntry relationship = pr.getRelationship(gridID, belowID);
+                    if (relationship.relationshipType() == RelationshipType.MERGE) {
+                        new_y = belowPixel.y;
+                        new_x = belowPixel.x;
+
+                        pg.erasePixel(gridPixel.x, gridPixel.y);
+                        pg.erasePixel(new_x, new_y);
+
+                        pg.setPixel(new_x, new_y, pr.createInstance(relationship.out()));;
+                        continue;
+                    }
+                } else if (pg.canDisplace(belowPixel, gridPixel)) {
                     new_y = gridPixel.y+1;
 
                     pg.movePixel(new_x, new_y, gridPixel);
@@ -417,8 +435,12 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
 
         // register powders
         simulation.pr.register(new SandPowder(), "sand_powder");
+        simulation.pr.register(new WetSandPowder(), "wet_sand_powder");
         simulation.pr.register(new RockPowder(), "rock_powder");
         simulation.pr.register(new WaterFluid(), "water_fluid");
+
+        // register relationships
+        simulation.pr.registerRelationship("sand_powder", "water_fluid", "wet_sand_powder", RelationshipType.MERGE);
 
         new Thread(simulation).start();
 //        new Thread(simulation::mouseLoop).start();
