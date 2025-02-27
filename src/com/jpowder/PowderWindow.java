@@ -3,9 +3,7 @@ package com.jpowder;
 import com.jpowder.powder.*;
 
 import javax.swing.JFrame;
-import java.awt.Canvas;
-import java.awt.Point;
-import java.awt.Graphics;
+import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
@@ -47,9 +45,10 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
     public PowderWindow(int width, int height) {
         this.width = width;
         this.height = height;
+        this.setBackground(new Color(0, 0, 0));
         frame = new JFrame("Powder Simulation");
         image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-        pg = new PowderGrid(350, 250);
+        pg = new PowderGrid(50, 50);
         pr = new Registry();
         pixels = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
         frame.add(this);
