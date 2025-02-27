@@ -80,6 +80,9 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
         } else if (e.getKeyChar() == 'c') {
             pg.clearGrid();
             pg.mergeGrid();
+        } else if (e.getKeyChar() == 'f' && paused) {
+            updatePixels();
+            pg.mergeGrid();
         }
     }
 
