@@ -163,7 +163,7 @@ public class PowderGrid {
     public void movePixel(int x, int y, BasePowder powder) {
         int oldPos = findTrueLocation(powder.x, powder.y);
 
-        if (x >= 0 && x < width-1 && y >= 0 && y < height) {
+        if (x >= 0 && x < width && y >= 0 && y < height) {
             int newPos = findTrueLocation(x, y);
 
             BasePowder displacedPowder = updatablePixels[newPos];

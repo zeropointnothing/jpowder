@@ -25,7 +25,6 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
     private int width;
     private int height;
 
-    private int yPadding = 1;
     private boolean rainbow = false;
     private final PowderGrid pg;
     private final Registry pr;
@@ -50,7 +49,7 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
         this.height = height;
         frame = new JFrame("Powder Simulation");
         image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-        pg = new PowderGrid(250, 150);
+        pg = new PowderGrid(50, 50);
         pr = new Registry();
         pixels = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
         frame.add(this);
@@ -132,8 +131,8 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
         while (true) {
             long renderStart = System.currentTimeMillis();
 
-            int newWidth = frame.getWidth();
-            int newHeight = frame.getHeight();
+            int newWidth = getWidth();
+            int newHeight = getHeight();
             if (newHeight != height || newWidth != width) {
                 height = newHeight;
                 width = newWidth;
@@ -251,7 +250,7 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
                 gridPixel.velocity = 0;
                 new_y = gridPixel.y;
             } else if (gridPixel.shift == ShiftRule.FLUID)  {
-                if (pg.hasNeighborBelow(gridPixel) || gridPixel.y >= pg.getHeight()-yPadding) {
+                if (pg.hasNeighborBelow(gridPixel) || gridPixel.y >= pg.getHeight()-1) {
                     gridPixel.velocity = 0;
                     new_y = gridPixel.y;
 
@@ -315,14 +314,14 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
             }
 
             // Ensure new_x and new_y are within bounds
-            if (new_x >= pg.getWidth()-1) {
+            if (new_x >= pg.getWidth()) {
                 new_x = pg.getWidth() - 2;
             } else if (new_x < 0) {
                 new_x = 0;
             }
 
-            if (new_y >= pg.getHeight()-yPadding) {
-                new_y = pg.getHeight() - yPadding;
+            if (new_y >= pg.getHeight()) {
+                new_y = pg.getHeight();
             } else if (new_y < 0) {
                 new_y = 0;
             }
@@ -334,7 +333,7 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
 
     private void addRandPixel() {
         int randX = rand.nextInt(1, pg.getWidth());
-        int randY = rand.nextInt(1, pg.getHeight()-yPadding); // trim 25 for now so we dont go out of bounds
+        int randY = rand.nextInt(1, pg.getHeight()); // trim 25 for now so we dont go out of bounds
 
         if (!pg.isPowderAt(randX, randY)) {
             pg.setPixel(randX, randY, new SandPowder());
@@ -353,8 +352,8 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
         int adjustedY = (int) ((mousePos.y - renderYOffset) / pixelSize);
 
         // Ensure grid coordinates are within bounds
-        adjustedX = Math.max(0, Math.min(adjustedX, pg.getWidth() - 2));
-        adjustedY = Math.max(0, Math.min(adjustedY, pg.getHeight() - yPadding));
+        adjustedX = Math.max(0, Math.min(adjustedX, pg.getWidth() - 1));
+        adjustedY = Math.max(0, Math.min(adjustedY, pg.getHeight() - 1));
 
         return new Point(adjustedX, adjustedY);
     }
