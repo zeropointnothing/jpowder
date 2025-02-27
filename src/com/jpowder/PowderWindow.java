@@ -49,7 +49,7 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
         this.height = height;
         frame = new JFrame("Powder Simulation");
         image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-        pg = new PowderGrid(50, 50);
+        pg = new PowderGrid(350, 250);
         pr = new Registry();
         pixels = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
         frame.add(this);
@@ -369,7 +369,7 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
                 if (pg.getPixels()[gridY * pg.getWidth() + gridX] != null) {
                     color = pg.getPixels()[gridY * pg.getWidth() + gridX].color;
                 } else {
-                    color = 0;
+                    color = PowderUtilities.rgbToColorInt(10, 10, 10);
                 }
 
                 for (int y = 0; y < pixelSize; y++) {
