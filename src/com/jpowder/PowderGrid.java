@@ -2,6 +2,8 @@ package com.jpowder;
 
 import com.jpowder.powder.BasePowder;
 
+import java.util.Arrays;
+
 public class PowderGrid {
     private final int width;
     private final int height;
@@ -149,6 +151,10 @@ public class PowderGrid {
      */
     public void mergeGrid() {
         pixels = updatablePixels.clone();
+    }
+
+    public void clearGrid() {
+        Arrays.fill(updatablePixels, null);
     }
 
     public void movePixel(int x, int y, BasePowder powder) {

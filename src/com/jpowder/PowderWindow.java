@@ -77,6 +77,9 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
             selectedPowder = "water_fluid";
         } else if (e.getKeyChar() == 'e') {
             erase = !erase;
+        } else if (e.getKeyChar() == 'c') {
+            pg.clearGrid();
+            pg.mergeGrid();
         }
     }
 
