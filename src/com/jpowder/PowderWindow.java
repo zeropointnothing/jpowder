@@ -30,6 +30,7 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
     private final Registry pr;
     private String selectedPowder = "water_fluid";
     private boolean erase = false;
+    private boolean paused = false;
 
     private boolean mouseDown = false;
     private Point mousePos;
@@ -80,7 +81,13 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
     }
 
     /** Handle the key pressed event from the text field. */
-    public void keyPressed(KeyEvent e) { }
+    public void keyPressed(KeyEvent e) {
+        System.out.println("Key Pressed: " + e);
+
+         if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+            paused = !paused;
+        }
+    }
 
     /** Handle the key released event from the text field. */
     public void keyReleased(KeyEvent e) { }
@@ -153,9 +160,11 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
                 }
             }
 
-            updatePixels();
+            if (!paused) {
+                updatePixels();
 //            pg.refreshAllPixels();
-            pg.mergeGrid();
+                pg.mergeGrid();
+            }
             render();
 
             long renderEnd = System.currentTimeMillis();
