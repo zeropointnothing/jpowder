@@ -2,12 +2,12 @@ package com.jpowder;
 
 import com.jpowder.powder.*;
 
-import javax.swing.JFrame;
+import javax.swing.*;
+import javax.swing.border.BevelBorder;
+import javax.swing.border.Border;
+import javax.swing.border.EtchedBorder;
 import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.event.*;
 import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
@@ -26,10 +26,14 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
     private int width;
     private int height;
 
+    private final int powderItemWidth;
+    private final int powderItemHeight;
+    private static ArrayList<JButton> toolboxButtons;
+
     private boolean rainbow = false;
     private final PowderGrid pg;
     private final Registry pr;
-    private String selectedPowder = "water_fluid";
+    private static String selectedPowder = "water_fluid";
     private boolean erase = false;
     private boolean paused = false;
 
@@ -53,6 +57,9 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
         image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         pg = new PowderGrid(50, 50);
         pr = new Registry();
+        powderItemWidth = 150;
+        powderItemHeight = 50;
+
         pixels = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
         frame.add(this);
         frame.pack();
@@ -65,20 +72,83 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
         addKeyListener(this);
     }
 
+    private static class PowderButtonListener implements ActionListener {
+        String powderID;
+        JButton button;
+        public PowderButtonListener(String powderID, JButton button) {
+            this.powderID = powderID;
+            this.button = button;
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            for (JButton button : toolboxButtons) {
+                if (button != this.button) {
+                    button.setBorder(BorderFactory.createEmptyBorder());
+                } else {
+                    // Handle powder selection
+                    System.out.println("Selected Powder: " + powderID);
+                    Border underBorder = BorderFactory.createLineBorder(new Color(0,0,0), 8);
+                    Border topBorder = BorderFactory.createLineBorder(Color.gray, 5);
+                    Border buttonBorder = BorderFactory.createCompoundBorder(topBorder, underBorder);
+
+                    button.setBorder(buttonBorder);
+                    selectedPowder = powderID;
+                }
+            }
+        }
+    }
+
+    public void createToolbar() {
+        System.out.println("creating toolbar...");
+        toolboxButtons = new ArrayList<>();
+        // Create a scrollable button panel
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setBackground(new Color(0, 0, 0));
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder());
+        buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
+        for (Registry.RegistryEntry entry : pr.getRegisteredPowder()) { // Example buttons
+            JButton button = new JButton(entry.pretty);
+
+            Border buttonBorder;
+            if (Objects.equals(entry.id, selectedPowder)) {
+                Border underBorder = BorderFactory.createLineBorder(new Color(0,0,0), 8);
+                Border topBorder = BorderFactory.createLineBorder(Color.gray, 5);
+                buttonBorder = BorderFactory.createCompoundBorder(topBorder, underBorder);
+            } else {
+                buttonBorder = BorderFactory.createEmptyBorder();
+            }
+
+            button.setPreferredSize(new Dimension(powderItemWidth-1, powderItemHeight-1)); // Set preferred size for each button
+            button.setMaximumSize(new Dimension(powderItemWidth-1, powderItemHeight-1)); // Optional: Set maximum size to ensure consi
+            button.setBackground(new Color(entry.powder.color));
+            button.setForeground(PowderUtilities.colorIntToRGB(PowderUtilities.invertColorInt(entry.powder.color)));
+            button.setBorder(buttonBorder);
+            button.addActionListener(new PowderButtonListener(entry.id, button));
+            buttonPanel.add(button);
+            toolboxButtons.add(button);
+        }
+
+        // Add the button panel to a JScrollPane
+        JScrollPane scrollPane = new JScrollPane(buttonPanel, JScrollPane.VERTICAL_SCROLLBAR_NEVER, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+
+
+        // support horizontal scrolling
+
+        scrollPane.setBackground(new Color(0,0,0));
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        scrollPane.setPreferredSize(new Dimension(width, powderItemHeight+10)); // Adjust the height as needed
+        frame.add(scrollPane, BorderLayout.SOUTH);
+        frame.setVisible(true); // ensure new gui elements are reflected
+
+    }
+
     /** Handle the key typed event from the text field. */
     public void keyTyped(KeyEvent e) {
         System.out.println("Key Typed: " + e);
 
         if (e.getKeyChar() == 'g') {
             rainbow = !rainbow;
-        } else if (e.getKeyChar() == 'r') {
-            selectedPowder = "rock_powder";
-        } else if (e.getKeyChar() == 's') {
-            selectedPowder = "sand_powder";
-        } else if (e.getKeyChar() == 'm') {
-            selectedPowder = "wet_sand_powder";
-        } else if (e.getKeyChar() == 'w') {
-            selectedPowder = "water_fluid";
         } else if (e.getKeyChar() == 'e') {
             erase = !erase;
         } else if (e.getKeyChar() == 'c') {
@@ -455,14 +525,15 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
         }
 
         // register powders
-        simulation.pr.register(new SandPowder(), "sand_powder");
-        simulation.pr.register(new WetSandPowder(), "wet_sand_powder");
-        simulation.pr.register(new RockPowder(), "rock_powder");
-        simulation.pr.register(new WaterFluid(), "water_fluid");
+        simulation.pr.register(new SandPowder(), "sand_powder", "Sand");
+        simulation.pr.register(new WetSandPowder(), "wet_sand_powder", "Moist Sand");
+        simulation.pr.register(new RockPowder(), "rock_powder", "Rock");
+        simulation.pr.register(new WaterFluid(), "water_fluid", "Water");
 
         // register relationships
         simulation.pr.registerRelationship("sand_powder", "water_fluid", "wet_sand_powder", RelationshipType.MERGE);
 
+        simulation.createToolbar();
         new Thread(simulation).start();
 //        new Thread(simulation::mouseLoop).start();
     }

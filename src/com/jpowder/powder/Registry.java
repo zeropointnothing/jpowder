@@ -15,13 +15,15 @@ public class Registry {
     /**
      * Registry entry, used for storing BasePowder objects and an ID.
      */
-    private static class RegistryEntry {
+    public static class RegistryEntry {
         public final BasePowder powder;
         public final String id;
+        public final String pretty;
 
-        public RegistryEntry(BasePowder powder, String id) {
+        public RegistryEntry(BasePowder powder, String id, String pretty) {
             this.powder = powder;
             this.id = id;
+            this.pretty = pretty;
         }
     }
     public static class RelationshipEntry {
@@ -49,8 +51,8 @@ public class Registry {
      * @param powder The instance of the powder to clone
      * @param id The id to set the powder to
      */
-    public void register(BasePowder powder, String id) {
-        registeredPowder.add(new RegistryEntry(powder, id));
+    public void register(BasePowder powder, String id, String pretty) {
+        registeredPowder.add(new RegistryEntry(powder, id, pretty));
     }
     public void registerRelationship(String first, String second, String out, RelationshipType relationshipType) throws IllegalArgumentException {
         if (isRegistered(first) && isRegistered(out) && isRegistered(out)) {
@@ -92,6 +94,9 @@ public class Registry {
             }
         }
         throw new IllegalArgumentException("No such class '" + powder.getClass() + "' is registered.");
+    }
+    public ArrayList<RegistryEntry> getRegisteredPowder() {
+        return registeredPowder;
     }
     public boolean hasRelationship(String first, String second) {
         for (RelationshipEntry entry : registeredRelationships) {
