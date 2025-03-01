@@ -132,7 +132,6 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
         // Add the button panel to a JScrollPane
         JScrollPane scrollPane = new JScrollPane(buttonPanel, JScrollPane.VERTICAL_SCROLLBAR_NEVER, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 
-
         // support horizontal scrolling
 
         scrollPane.setBackground(new Color(0,0,0));
@@ -210,6 +209,11 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
                 width = newWidth;
 
                 createImage();
+            }
+
+            // no reason to hand focus over to other parts of the app
+            if (!isFocusOwner() && frame.isFocused()) { // only try to focus if the window is focused
+                requestFocus();
             }
 
             mousePos = frame.getMousePosition();
