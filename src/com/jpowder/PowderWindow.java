@@ -55,7 +55,7 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
         this.width = width;
         this.height = height;
         this.setBackground(new Color(0, 0, 0));
-        frame = new JFrame("Powder Simulation");
+        frame = new JFrame("jPowder - Simulation");
         pg = new PowderGrid(50, 50);
         pr = new Registry();
         powderItemWidth = 150;
