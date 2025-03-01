@@ -20,8 +20,10 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
     private final Random rand = new Random();
     private JFrame frame;
     private BufferedImage image;
+    private int[] lastPixels;
     private int[] pixels;
     public boolean webMode = false;
+    public boolean reduGraphicsMode = false;
 
     private int width;
     private int height;
@@ -54,13 +56,11 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
         this.height = height;
         this.setBackground(new Color(0, 0, 0));
         frame = new JFrame("Powder Simulation");
-        image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         pg = new PowderGrid(50, 50);
         pr = new Registry();
         powderItemWidth = 150;
         powderItemHeight = 50;
 
-        pixels = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
         frame.add(this);
         frame.pack();
         frame.setSize(width, height);
@@ -212,7 +212,6 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
                 createImage();
             }
 
-            pixels = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
             mousePos = frame.getMousePosition();
 
             // Calculate the pixel size based on both the window's width and height using floating-point arithmetic
@@ -268,6 +267,7 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
 
         image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         pixels = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
+        lastPixels = new int[pixels.length];
     }
 
     /**
@@ -465,8 +465,8 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
 
         // render the cursor
         if (mousePos != null) {;
-            // mouse position is based on the frame, not grid
             Point gridPos = frameToPowderGrid(mousePos.x, mousePos.y);
+            // mouse position is based on the frame, not grid
             for (int y = 0; y < pixelSize; y++) {
                 for (int x = 0; x < pixelSize; x++) {
                     int px = (int) (gridPos.x * pixelSize + x + renderXOffset);
@@ -486,7 +486,24 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
             }
         }
 
-        g.drawImage(image, 0, 0, width, height, null);
+
+        // only update the screen if we've changed something
+        if (!Arrays.equals(pixels, lastPixels)) {
+            if (!reduGraphicsMode) {
+                g.drawImage(image, 0, 0, width, height, null);
+            } else {
+                // reduced graphics, only draw updated pixels
+                for (int y = 0; y < height; y+= (int) pixelSize+1) {
+                    for (int x = 0; x < width; x+= (int) pixelSize+1) {
+                        if (pixels[y*width+x] != lastPixels[y*width+x]) {
+                            g.setColor(new Color(pixels[y*width+x]));
+                            g.fillRect(x-5, y-5, (int) pixelSize+1, (int) pixelSize+1);
+                        }
+                    }
+                }
+            }
+        }
+        lastPixels = pixels.clone();
         g.dispose();
         bs.show();
     }
@@ -514,13 +531,16 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
     public static void main(String[] args) {
         PowderWindow simulation = new PowderWindow(800, 800);
 
-        System.out.println(Arrays.toString(args));
+        for (String arg : Arrays.toString(args).split(",")) {
+            arg = arg.trim();
+            arg = arg.replace("[", "").replace("]", "");
 
-        for (String arg : args) {
             if (Objects.equals(arg, "-web") || Objects.equals(arg, "--web")) {
                 System.out.println("Running in Web mode. Buffering will be set to single.");
                 simulation.webMode = true;
-                break;
+            } else if (Objects.equals(arg, "-redugraphics") || Objects.equals(arg, "--redugraphics")) {
+                System.out.println("Enabling reduced graphics. Expect visual issues.");
+                simulation.reduGraphicsMode = true;
             }
         }
 
