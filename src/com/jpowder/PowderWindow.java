@@ -69,6 +69,11 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
 
+        java.net.URL url = ClassLoader.getSystemResource("com/jpowder/resources/icon.png");
+        Toolkit kit = Toolkit.getDefaultToolkit();
+        Image img = kit.createImage(url);
+        this.frame.setIconImage(img);
+
         addMouseListener(this);
         addKeyListener(this);
     }
