@@ -4,9 +4,8 @@ import com.jpowder.PowderUtilities;
 
 public class SandPowder extends BasePowder {
     public SandPowder() {
-        super(ShiftRule.SLIP, 2);
+        super(ShiftRule.SLIP, 2, PowderUtilities.rgbToColorInt(246, 225, 176), 0);
 
-        color = PowderUtilities.rgbToColorInt(246, 225, 176);
         canDisplaceHorizontal = true;
     }
 }

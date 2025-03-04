@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Random;
+import java.util.stream.Stream;
 
 public class PowderWindow extends Canvas implements Runnable, MouseListener, KeyListener {
     private final Random rand = new Random();
@@ -344,34 +345,127 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
                         new_x += 1;
                     }
                 }
+            } else if (gridPixel instanceof BaseGas) {
+                if (rand.nextInt(((BaseGas) gridPixel).floatMax) >= ((BaseGas) gridPixel).floatNeeded) {
+                    new_y = (int) (gridPixel.y - gridPixel.velocity);
+                } else if (rand.nextInt(((BaseGas) gridPixel).sinkMax) >= ((BaseGas) gridPixel).sinkNeeded) {
+                    new_y = (int) (gridPixel.y + gridPixel.velocity);
+                } else {
+                    new_y = gridPixel.y;
+                }
+
+                if (pg.hasNeighborAbove(gridPixel)) {
+                    new_y = gridPixel.y;
+                }
+
+                boolean canMoveLeft = (!pg.isPowderAt(gridPixel.x-1, new_y));
+                boolean canMoveRight = (!pg.isPowderAt(gridPixel.x+1, new_y));
+                boolean shouldMove = (rand.nextInt(((BaseGas) gridPixel).floatMax) >= ((BaseGas) gridPixel).shiftNeeded);
+
+                if (!shouldMove) {
+                    assert true; // do nothing
+                } else if (canMoveLeft && canMoveRight) {
+                    new_x += rand.nextBoolean() ? -1 : 1;
+                } else if (canMoveLeft) {
+                    new_x -= 1;
+                } else if (canMoveRight) {
+                    new_x += 1;
+                }
+                gridPixel.life -= 1;
+
+                // darken the gas based on its life
+                Color originalColor = PowderUtilities.colorIntToRGB(gridPixel.originalColor);
+                int shiftedRed = (int) Math.min(Math.max(0, originalColor.getRed()*((float) gridPixel.life/gridPixel.originalLife)), 255);
+                int shiftedGreen = (int) Math.min(Math.max(0, originalColor.getGreen()*((float) gridPixel.life/gridPixel.originalLife)), 255);
+                int shiftedBlue = (int) Math.min(Math.max(0, originalColor.getBlue()*((float) gridPixel.life/gridPixel.originalLife)), 255);
+
+                gridPixel.color = PowderUtilities.rgbToColorInt(shiftedRed, shiftedGreen, shiftedBlue);
+
+                if (gridPixel.life <= 1) {
+                    pg.erasePixel(gridPixel.x, gridPixel.y);
+                    continue;
+                }
             }
 
             // float shift, powder can move pixels of a lower fIndex that itself
-            if (pg.hasNeighborBelow(gridPixel)) {
-                BasePowder belowPixel = pg.getUpdatablePixels()[pg.findTrueLocation(gridPixel.x, gridPixel.y+1)];
-                String gridID = pr.getID(gridPixel);
-                String belowID = pr.getID(belowPixel);
+            // relationship check
+            PowderGrid.Surrounding surr = pg.getSurrounding(gridPixel); // get all surrounding pixels
+            if (!Stream.of(surr).allMatch(Objects::isNull)) {
+                BasePowder belowPixel = surr.below;
+                BasePowder abovePixel = surr.above;
+                BasePowder leftPixel = surr.left;
+                BasePowder rightPixel = surr.right;
 
-                // relationship check
+                // get the id's of the pixels for relationship checking
+                String gridID = pr.getID(gridPixel); // current pixel
+                String aboveID = pr.getID(abovePixel);
+                String belowID = pr.getID(belowPixel);
+                String leftID = pr.getID(leftPixel);
+                String rightID = pr.getID(rightPixel);
+
+                // select a direction to check against
+                Registry.RelationshipEntry relationship;
+                BasePowder relationshipWith;
+                String relationshipID;
                 if (pr.hasRelationship(gridID, belowID)) {
-                    Registry.RelationshipEntry relationship = pr.getRelationship(gridID, belowID);
+                    relationship = pr.getRelationship(gridID, belowID);
+                    relationshipWith = belowPixel;
+                    relationshipID = belowID;
+                } else if (pr.hasRelationship(gridID, aboveID)) {
+                    relationship = pr.getRelationship(gridID, aboveID);
+                    relationshipWith = abovePixel;
+                    relationshipID = aboveID;
+                } else if (pr.hasRelationship(gridID, leftID)) {
+                    relationship = pr.getRelationship(gridID, leftID);
+                    relationshipWith = leftPixel;
+                    relationshipID = leftID;
+                } else if (pr.hasRelationship(gridID, rightID)) {
+                    relationship = pr.getRelationship(gridID, rightID);
+                    relationshipWith = rightPixel;
+                    relationshipID = rightID;
+                } else {
+                    relationship = null;
+                    relationshipWith = null;
+                    relationshipID = null;
+                }
+
+                if (relationship != null && relationshipWith != null) {
                     if (relationship.relationshipType == RelationshipType.MERGE) {
-                        new_y = belowPixel.y;
-                        new_x = belowPixel.x;
+                        // combine two powders into 'out'
+
+                        new_y = relationshipWith.y;
+                        new_x = relationshipWith.x;
 
                         pg.erasePixel(gridPixel.x, gridPixel.y);
                         pg.erasePixel(new_x, new_y);
 
                         pg.setPixel(new_x, new_y, pr.createInstance(relationship.out));;
                         continue;
+                    } else if (relationship.relationshipType == RelationshipType.CONSUME) {
+                        // 'out' consumes the other powder
+
+                        if (Objects.equals(gridID, relationship.out)) {
+                            pg.erasePixel(relationshipWith.x, relationshipWith.y);
+                        } else {
+                            pg.erasePixel(gridPixel.x, gridPixel.y);
+                        }
+                        continue;
+                    } else if (relationship.relationshipType == RelationshipType.PAINT) {
+                        // other powder is painted with 'out'
+
+                        if (!Objects.equals(relationshipID, relationship.out)) {
+                            pg.erasePixel(relationshipWith.x, relationshipWith.y);
+                            pg.setPixel(relationshipWith.x, relationshipWith.y, pr.createInstance(relationship.out));
+                        }
                     }
-                } else if (pg.canDisplace(belowPixel, gridPixel)) {
+                 } else if (pg.canDisplace(belowPixel, gridPixel)) {
                     new_y = gridPixel.y+1;
 
                     pg.movePixel(new_x, new_y, gridPixel);
                     continue;
                 }
             }
+
             boolean shouldMoveLeft = rand.nextBoolean();
             if (pg.isPowderAt(gridPixel.x-1, gridPixel.y) && shouldMoveLeft) {
                 BasePowder sidePixel = pg.getUpdatablePixels()[pg.findTrueLocation(gridPixel.x-1, gridPixel.y)];
@@ -549,15 +643,25 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
         }
 
         // register powders
+
+        System.out.println("registering powders...");
         simulation.pr.register(new SandPowder(), "sand_powder", "Sand");
         simulation.pr.register(new WetSandPowder(), "wet_sand_powder", "Moist Sand");
         simulation.pr.register(new RockPowder(), "rock_powder", "Rock");
         simulation.pr.register(new WaterFluid(), "water_fluid", "Water");
+        simulation.pr.register(new FireGas(), "fire_gas", "Fire");
+        simulation.pr.register(new WoodPowder(), "wood_powder", "Wood");
+        simulation.pr.register(new HydrogenFluid(), "hydrogen_fluid", "Hydrogen");
 
         // register relationships
+        System.out.println("registering relationships...");
         simulation.pr.registerRelationship("sand_powder", "water_fluid", "wet_sand_powder", RelationshipType.MERGE);
+        simulation.pr.registerRelationship("fire_gas", "water_fluid", "water_fluid", RelationshipType.CONSUME);
+        simulation.pr.registerRelationship("fire_gas", "wood_powder", "fire_gas", RelationshipType.PAINT);
+        simulation.pr.registerRelationship("fire_gas", "hydrogen_fluid", "fire_gas", RelationshipType.PAINT);
 
         simulation.createToolbar();
+        System.out.println("starting simulation!");
         new Thread(simulation).start();
 //        new Thread(simulation::mouseLoop).start();
     }

@@ -3,10 +3,9 @@ package com.jpowder.powder;
 import com.jpowder.PowderUtilities;
 
 public class BaseFluid extends BasePowder {
-    public BaseFluid() {
-        super(ShiftRule.FLUID, 0);
+    public BaseFluid(int findex, int life, int color) {
+        super(ShiftRule.FLUID, findex, color, life);
 
-        color = PowderUtilities.rgbToColorInt(0, 0, 255);
         canDisplaceHorizontal = true;
     }
 }

@@ -88,6 +88,10 @@ public class Registry {
         throw new IllegalArgumentException("No such relationship (" + first + "," + second + ") is registered.");
     }
     public String getID(BasePowder powder) throws IllegalArgumentException {
+        if (powder == null) {
+            return null;
+        }
+
         for (RegistryEntry entry : registeredPowder) {
             if (entry.powder.getClass() == powder.getClass()) {
                 return entry.id;

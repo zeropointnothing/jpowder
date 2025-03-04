@@ -8,6 +8,8 @@ public class BasePowder implements Cloneable {
 
     public final ShiftRule shift;
     public final int fIndex;
+    public int life;
+    public final int originalLife;
     public boolean canDisplaceHorizontal;
     public boolean canDisplaceVertical;
 
@@ -16,6 +18,7 @@ public class BasePowder implements Cloneable {
     private final double gravity = 9.8;
 
     public int color;
+    public final int originalColor;
 
     public void calculateNextPos(float timeElapsed) {
 //        xf = x0 + v0*t + (1/2)*g*t^2
@@ -29,18 +32,22 @@ public class BasePowder implements Cloneable {
         velocity = 1.0f;
     }
 
-    public BasePowder(ShiftRule shift, int fIndex) {
+    public BasePowder(ShiftRule shift, int fIndex, int color, int life) {
         x = 0;
         y = 0;
         velocity = 0.0f;
+        this.life = life;
 
-        color = (int) (Math.random() * 0xffffff);
+//        color = (int) (Math.random() * 0xffffff);
+        this.color = color;
         this.shift = shift;
         this.fIndex = fIndex;
 
         canDisplaceHorizontal = true;
         canDisplaceVertical = true;
         erased = false;
+        originalColor = this.color;
+        originalLife = this.life;
     }
 
     @Override

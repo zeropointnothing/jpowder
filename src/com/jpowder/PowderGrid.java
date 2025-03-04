@@ -18,6 +18,20 @@ public class PowderGrid {
 
     }
 
+    public static class Surrounding {
+        public final BasePowder above;
+        public final BasePowder below;
+        public final BasePowder left;
+        public final BasePowder right;
+
+        public Surrounding(BasePowder above, BasePowder below, BasePowder left, BasePowder right) {
+            this.above = above;
+            this.below = below;
+            this.left = left;
+            this.right = right;
+        }
+    }
+
     public BasePowder[] getPixels() { return pixels; }
     public BasePowder[] getUpdatablePixels() { return updatablePixels; }
     public int getFilledPixels() {
@@ -88,6 +102,10 @@ public class PowderGrid {
      * @return if displacement is allowed
      */
     public boolean canDisplace(BasePowder original, BasePowder with, boolean reverse) {
+        if (original == null || with == null) {
+            return false;
+        }
+
         if (original.fIndex == -1 || with.fIndex == -1) {
             return false;
         }
@@ -126,6 +144,42 @@ public class PowderGrid {
         } catch (ArrayIndexOutOfBoundsException e) {
             return false;
         }
+    }
+
+    public Surrounding getSurrounding(BasePowder powder) {
+        BasePowder above;
+        BasePowder below;
+        BasePowder left;
+        BasePowder right;
+        try {
+            above = updatablePixels[findTrueLocation(powder.x, powder.y-1)];
+        } catch (ArrayIndexOutOfBoundsException e) {
+            above = null;
+        }
+        try {
+            below = updatablePixels[findTrueLocation(powder.x, powder.y+1)];
+        } catch (ArrayIndexOutOfBoundsException e) {
+            below = null;
+        }
+        try {
+            if (powder.x-1 > 0) { // prevent wrapping
+                left = updatablePixels[findTrueLocation(powder.x-1, powder.y)];
+            } else {
+                left = null;
+            }
+        } catch (ArrayIndexOutOfBoundsException e) {
+            left = null;
+        }
+        try {
+            if (powder.x+1 <= width-1) { // prevent wrapping
+                right = updatablePixels[findTrueLocation(powder.x+1, powder.y)];
+            } else {
+                right = null;
+            }
+        } catch (ArrayIndexOutOfBoundsException e) {
+            right = null;
+        }
+        return new Surrounding(above, below, left, right);
     }
 
     public void setPixel(int x, int y, BasePowder powder) {

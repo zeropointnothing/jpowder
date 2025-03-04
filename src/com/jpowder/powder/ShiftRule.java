@@ -20,5 +20,9 @@ public enum ShiftRule {
     /**
      * This powder should act as a fluid.
      */
-    FLUID
+    FLUID,
+    /**
+     * This powder should act as a gas.
+     */
+    GAS
 }

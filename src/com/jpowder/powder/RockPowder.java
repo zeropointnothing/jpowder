@@ -4,9 +4,8 @@ import com.jpowder.PowderUtilities;
 
 public class RockPowder extends BasePowder {
     public RockPowder() {
-        super(ShiftRule.SOLID, -1);
+        super(ShiftRule.SOLID, -1, PowderUtilities.rgbToColorInt(61, 59, 60), 0);
 
-        color = PowderUtilities.rgbToColorInt(61, 59, 60);
         canDisplaceHorizontal = false;
         canDisplaceVertical = false;
     }
