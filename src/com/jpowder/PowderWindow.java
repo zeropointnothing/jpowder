@@ -3,9 +3,7 @@ package com.jpowder;
 import com.jpowder.powder.*;
 
 import javax.swing.*;
-import javax.swing.border.BevelBorder;
 import javax.swing.border.Border;
-import javax.swing.border.EtchedBorder;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferStrategy;
@@ -19,7 +17,7 @@ import java.util.stream.Stream;
 
 public class PowderWindow extends Canvas implements Runnable, MouseListener, KeyListener {
     private final Random rand = new Random();
-    private JFrame frame;
+    private final JFrame frame;
     private BufferedImage image;
     private int[] lastPixels;
     private int[] pixels;
@@ -127,7 +125,7 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
             }
 
             button.setPreferredSize(new Dimension(powderItemWidth-1, powderItemHeight-1)); // Set preferred size for each button
-            button.setMaximumSize(new Dimension(powderItemWidth-1, powderItemHeight-1)); // Optional: Set maximum size to ensure consi
+            button.setMaximumSize(new Dimension(powderItemWidth-1, powderItemHeight-1)); // Optional: Set maximum size to ensure consistency
             button.setBackground(new Color(entry.powder.color));
             button.setForeground(PowderUtilities.colorIntToRGB(PowderUtilities.invertColorInt(entry.powder.color)));
             button.setBorder(buttonBorder);
@@ -262,9 +260,11 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
 
             try {
                 if (sleepTime > 0) {
+                    //noinspection BusyWait
                     Thread.sleep(sleepTime); // Sleep for ~60 FPS
                 }
             } catch (InterruptedException e) {
+                //noinspection CallToPrintStackTrace
                 e.printStackTrace();
                 break;
             }
@@ -445,7 +445,7 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
                         pg.erasePixel(gridPixel.x, gridPixel.y);
                         pg.erasePixel(new_x, new_y);
 
-                        pg.setPixel(new_x, new_y, pr.createInstance(relationship.out));;
+                        pg.setPixel(new_x, new_y, pr.createInstance(relationship.out));
                         continue;
                     } else if (relationship.relationshipType == RelationshipType.CONSUME) {
                         // 'out' consumes the other powder
@@ -506,36 +506,16 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
         }
     }
 
-
-    private void addRandPixel() {
-        int randX = Math.max(0, rand.nextInt(pg.getWidth()));
-        int randY = Math.max(0, rand.nextInt(pg.getHeight())); // trim 25 for now so we dont go out of bounds
-
-        if (!pg.isPowderAt(randX, randY)) {
-            pg.setPixel(randX, randY, new SandPowder());
-        }
-
-
-        // Update pixel positions based on your simulation logic
-//        for (int i = 0; i < grid_width * grid_height; i++) {
-//            grid_pixels[i] = (int) (Math.random() * 0xffffff); // Example: Random colors
-//        }
-    }
-
     private Point frameToPowderGrid(int x, int y) {
         // Adjust mouse position based on the component and offset
-        int adjustedX = (int) ((mousePos.x - renderXOffset) / pixelSize);
-        int adjustedY = (int) ((mousePos.y - renderYOffset) / pixelSize);
+        int adjustedX = (int) ((x - renderXOffset) / pixelSize);
+        int adjustedY = (int) ((y - renderYOffset) / pixelSize);
 
         // Ensure grid coordinates are within bounds
         adjustedX = Math.max(0, Math.min(adjustedX, pg.getWidth() - 1));
         adjustedY = Math.max(0, Math.min(adjustedY, pg.getHeight() - 1));
 
         return new Point(adjustedX, adjustedY);
-    }
-
-    public int rgbToColorInt(int r, int g, int b) {
-        return (r << 16) | (g << 8) | b;
     }
 
     private void render() {
@@ -568,7 +548,7 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
         }
 
         // render the cursor
-        if (mousePos != null) {;
+        if (mousePos != null) {
             Point gridPos = frameToPowderGrid(mousePos.x, mousePos.y);
             // mouse position is based on the frame, not grid
             for (int y = 0; y < pixelSize; y++) {
@@ -612,26 +592,6 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
         bs.show();
     }
 
-    private void mouseLoop() {
-        while (true) {
-            if (mouseDown && mousePos != null) {
-
-                Point transPos = frameToPowderGrid(mousePos.x, mousePos.y);
-
-                if (!pg.isPowderAt(transPos.x, transPos.y)) {
-                    pg.setPixel(transPos.x, transPos.y, pr.createInstance(selectedPowder));
-                }
-            }
-
-            try {
-                Thread.sleep(10); // Sleep for ~60 FPS
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-                break;
-            }
-        }
-    }
-
     public static void main(String[] args) {
         PowderWindow simulation = new PowderWindow(800, 800);
 
@@ -639,15 +599,22 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
             arg = arg.trim();
             arg = arg.replace("[", "").replace("]", "");
 
-            if (Objects.equals(arg, "-web") || Objects.equals(arg, "--web")) {
-                System.out.println("Running in Web mode. Buffering will be set to single.");
-                simulation.webMode = true;
-            } else if (Objects.equals(arg, "-redugraphics") || Objects.equals(arg, "--redugraphics")) {
-                System.out.println("Enabling reduced graphics. Expect visual issues.");
-                simulation.reduGraphicsMode = true;
-            } else if (Objects.equals(arg, "-allframes") || Objects.equals(arg, "--allframes")) {
-                System.out.println("Rendering all frames...");
-                simulation.allFramesMode = true;
+            switch (arg) {
+                case "-web":
+                case "--web":
+                    System.out.println("Running in Web mode. Buffering will be set to single.");
+                    simulation.webMode = true;
+                    break;
+                case "-redugraphics":
+                case "--redugraphics":
+                    System.out.println("Enabling reduced graphics. Expect visual issues.");
+                    simulation.reduGraphicsMode = true;
+                    break;
+                case "-allframes":
+                case "--allframes":
+                    System.out.println("Rendering all frames...");
+                    simulation.allFramesMode = true;
+                    break;
             }
         }
 
@@ -670,7 +637,7 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
         simulation.pr.registerRelationship("fire_gas", "hydrogen_fluid", "fire_gas", RelationshipType.PAINT);
 
         simulation.createToolbar();
-        System.out.println("starting simulation!");
+        System.out.println("starting simulation! (" + simulation.fps + " FPS)");
         new Thread(simulation).start();
 //        new Thread(simulation::mouseLoop).start();
     }
