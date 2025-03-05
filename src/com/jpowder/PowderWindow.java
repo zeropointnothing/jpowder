@@ -25,6 +25,7 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
     private int[] pixels;
     public boolean webMode = false;
     public boolean reduGraphicsMode = false;
+    public boolean allFramesMode = false;
 
     private int width;
     private int height;
@@ -591,7 +592,7 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
 
 
         // only update the screen if we've changed something
-        if (!Arrays.equals(pixels, lastPixels)) {
+        if (!Arrays.equals(pixels, lastPixels) || allFramesMode) {
             if (!reduGraphicsMode) {
                 g.drawImage(image, 0, 0, width, height, null);
             } else {
@@ -644,6 +645,9 @@ public class PowderWindow extends Canvas implements Runnable, MouseListener, Key
             } else if (Objects.equals(arg, "-redugraphics") || Objects.equals(arg, "--redugraphics")) {
                 System.out.println("Enabling reduced graphics. Expect visual issues.");
                 simulation.reduGraphicsMode = true;
+            } else if (Objects.equals(arg, "-allframes") || Objects.equals(arg, "--allframes")) {
+                System.out.println("Rendering all frames...");
+                simulation.allFramesMode = true;
             }
         }
 
